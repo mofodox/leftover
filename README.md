@@ -2,7 +2,15 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+First, set up your environment variables:
+
+```bash
+# Create a .env.local file with your Supabase credentials
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
@@ -16,9 +24,46 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Supabase Setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+This project uses [Supabase](https://supabase.com) for authentication and database storage. Follow these steps to set up your Supabase project:
+
+1. Create a new project in [Supabase](https://app.supabase.com)
+2. Get your project URL and anon key from the project settings
+3. Run the SQL query in `supabase_setup.sql` in the SQL editor of your Supabase project
+4. Add the URL and anon key to your `.env.local` file
+
+### Database Schema
+
+The application uses the following tables:
+
+- `incomes`: Stores user's income information
+  - `id`: UUID primary key
+  - `user_id`: References auth.users.id
+  - `amount`: Numeric field for the income amount
+  - `name`: Text field for income name (default: "Monthly Income")
+  - `description`: Optional text field for additional information
+  - `created_at`: Timestamp of record creation
+  - `updated_at`: Timestamp of last update
+
+- `expenses`: Stores individual expenses
+  - `id`: UUID primary key
+  - `user_id`: References auth.users.id
+  - `name`: Text field for expense name
+  - `amount`: Numeric field for the expense amount
+  - `created_at`: Timestamp of record creation
+  - `updated_at`: Timestamp of last update
+
+- `user_budgets`: Join table that automatically calculates disposable income
+  - `id`: UUID primary key
+  - `user_id`: References auth.users.id
+  - `name`: Text field for budget name (default: "Monthly Budget")
+  - `description`: Optional text field for additional information
+  - `disposable_income`: Automatically calculated field (total income - total expenses)
+  - `created_at`: Timestamp of record creation
+  - `updated_at`: Timestamp of last update
+
+This normalized database schema provides better organization and scalability for future features.
 
 ## Learn More
 
