@@ -202,18 +202,30 @@ function CalculatorContent() {
     setSaveStatus("saving");
     
     try {
-      const success = await deleteExpense(id);
+      // First update the UI immediately for better user experience
+      // Find the expense to be removed
+      const expenseToRemove = expenses.find((expense) => expense.id === id);
+      // Update local expenses state
+      const updatedExpenses = expenses.filter((expense) => expense.id !== id);
+      setExpenses(updatedExpenses);
       
-      if (success) {
-        setExpenses(expenses.filter((expense) => expense.id !== id));
+      // Calculate and update disposable income locally
+      if (expenseToRemove) {
+        const newDisposableIncome = income - updatedExpenses.reduce((total, expense) => total + expense.amount, 0);
+        setDisposableIncome(newDisposableIncome);
       }
       
-      // Get updated budget
-      if (user) {
-        const budgetData = await getUserBudget(user.id);
-        if (budgetData) {
-          setDisposableIncome(budgetData.disposable_income);
-        }
+      // Then handle the server-side deletion (but don't update UI again)
+      const success = await deleteExpense(id);
+      if (!success) {
+        // If server deletion failed, revert our optimistic UI update
+        setExpenses(expenses);
+        
+        // Recalculate the original disposable income
+        const originalTotalExpenses = expenses.reduce((total, expense) => total + expense.amount, 0);
+        setDisposableIncome(income - originalTotalExpenses);
+        
+        throw new Error("Server failed to delete expense");
       }
       
       setSaveStatus("success");

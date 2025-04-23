@@ -111,6 +111,8 @@ export const deleteExpense = async (expenseId: string): Promise<boolean> => {
       
     if (fetchError) throw fetchError;
     
+    const userId = expense.user_id;
+    
     const { error } = await supabase
       .from('expenses')
       .delete()
@@ -119,7 +121,7 @@ export const deleteExpense = async (expenseId: string): Promise<boolean> => {
     if (error) throw error;
     
     // Update user budget after deleting expense
-    await createOrUpdateBudget(expense.user_id);
+    await createOrUpdateBudget(userId);
     
     return true;
   } catch (error) {
