@@ -30,6 +30,9 @@ const Header = () => {
               <Link href="#how-it-works" className="font-medium hover:text-black/70 dark:hover:text-white/70 transition-colors">
                 How It Works
               </Link>
+              <a href="https://easy-paneer-e5a.notion.site/Leftover-Changelog-1df36dfb0ae38008a707fbccb444240d" target="_blank" className="font-medium hover:text-black/70 dark:hover:text-white/70 transition-colors">
+                Changelog
+            </a>
             </nav>
             <div className="flex items-center gap-3">
               <Link 
@@ -51,6 +54,9 @@ const Header = () => {
             <div className="text-sm text-black/70 dark:text-white/70 hidden md:block">
               {user?.email}
             </div>
+            <a href="https://easy-paneer-e5a.notion.site/Leftover-Changelog-1df36dfb0ae38008a707fbccb444240d" target="_blank">
+                Changelog
+            </a>
             <button
               onClick={() => signOut()}
               className="rounded-full bg-foreground text-background px-4 py-2 text-sm font-medium hover:bg-black/80 dark:hover:bg-white/80 transition-colors"
