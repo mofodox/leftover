@@ -1,5 +1,7 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+# Leftover Income Calculator
+
 ## Getting Started
 
 First, set up your environment variables:
@@ -51,10 +53,14 @@ The application uses the following tables:
   - `user_id`: References auth.users.id
   - `name`: Text field for expense name
   - `amount`: Numeric field for the expense amount
+  - `date`: Optional text field for backward compatibility
+  - `payment_frequency`: Payment type - one-time, monthly, or yearly (default: "one-time")
+  - `payment_day`: Day of month (1-31) for monthly and yearly payments
+  - `payment_month`: Month (1-12) for yearly payments only
   - `created_at`: Timestamp of record creation
   - `updated_at`: Timestamp of last update
 
-- `user_budgets`: Join table that automatically calculates disposable income
+- `user_budgets`: Join table that automatically calculates leftover income
   - `id`: UUID primary key
   - `user_id`: References auth.users.id
   - `name`: Text field for budget name (default: "Monthly Budget")
