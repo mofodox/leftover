@@ -5,6 +5,10 @@ export type Expense = {
   id: string;
   name: string;
   amount: number;
+  date?: string;
+  payment_frequency?: "one-time" | "monthly" | "yearly";
+  payment_day?: number; // Day of month for monthly payments (1-31)
+  payment_month?: number; // Month for yearly payments (1-12)
   created_at?: string;
   updated_at?: string;
 };
@@ -46,14 +50,24 @@ export const getUserExpenses = async (userId: string): Promise<Expense[]> => {
 };
 
 // Add a new expense
-export const addExpense = async (userId: string, name: string, amount: number): Promise<Expense | null> => {
+export const addExpense = async (
+  userId: string, 
+  name: string, 
+  amount: number, 
+  payment_frequency: "one-time" | "monthly" | "yearly" = "one-time",
+  payment_day?: number,
+  payment_month?: number
+): Promise<Expense | null> => {
   try {
     const { data, error } = await supabase
       .from('expenses')
       .insert({
         user_id: userId,
         name,
-        amount
+        amount,
+        payment_frequency,
+        payment_day,
+        payment_month
       })
       .select()
       .single();
@@ -71,7 +85,14 @@ export const addExpense = async (userId: string, name: string, amount: number): 
 };
 
 // Update an expense
-export const updateExpense = async (expenseId: string, updates: { name?: string; amount?: number }): Promise<Expense | null> => {
+export const updateExpense = async (expenseId: string, updates: { 
+  name?: string; 
+  amount?: number; 
+  date?: string; 
+  payment_frequency?: "one-time" | "monthly" | "yearly";
+  payment_day?: number;
+  payment_month?: number;
+}): Promise<Expense | null> => {
   try {
     const { data: expense, error: fetchError } = await supabase
       .from('expenses')
@@ -79,7 +100,10 @@ export const updateExpense = async (expenseId: string, updates: { name?: string;
       .eq('id', expenseId)
       .single();
       
-    if (fetchError) throw fetchError;
+    if (fetchError) {
+      console.error('Error fetching expense:', fetchError);
+      throw fetchError;
+    }
     
     const { data, error } = await supabase
       .from('expenses')
@@ -88,7 +112,10 @@ export const updateExpense = async (expenseId: string, updates: { name?: string;
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error updating expense in database:', error);
+      throw error;
+    }
     
     // Update user budget after updating expense
     await createOrUpdateBudget(expense.user_id);

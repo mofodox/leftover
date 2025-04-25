@@ -38,25 +38,7 @@ function CalculatorContent() {
       try {
         // Load expenses
         const expensesData = await getUserExpenses(user.id);
-        if (expensesData && expensesData.length > 0) {
-          setExpenses(expensesData);
-        } else {
-          // Set default expenses if none exist
-          const defaultExpenses = [
-            { id: uuidv4(), name: "Rent/Mortgage", amount: 0 },
-            { id: uuidv4(), name: "Utilities", amount: 0 },
-            { id: uuidv4(), name: "Groceries", amount: 0 },
-          ];
-          
-          // Add default expenses to database
-          for (const expense of defaultExpenses) {
-            await addExpense(user.id, expense.name, expense.amount);
-          }
-          
-          // Fetch expenses again to get the ones with proper IDs from the database
-          const newExpenses = await getUserExpenses(user.id);
-          setExpenses(newExpenses);
-        }
+        setExpenses(expensesData || []);
         
         // Load income
         const incomeData = await getUserIncome(user.id);
@@ -120,15 +102,38 @@ function CalculatorContent() {
 
   const handleExpenseChange = async (
     id: string,
-    field: "name" | "amount",
+    field: "name" | "amount" | "payment_frequency" | "payment_day" | "payment_month",
     value: string | number
   ) => {
     const updatedExpenses = expenses.map((expense) => {
       if (expense.id === id) {
-        return {
-          ...expense,
-          [field]: field === "amount" ? parseFloat(value as string) || 0 : value,
-        };
+        const updatedExpense = { ...expense };
+        
+        if (field === "payment_frequency") {
+          // Reset payment date fields when frequency changes
+          updatedExpense.payment_frequency = value as "one-time" | "monthly" | "yearly";
+          updatedExpense.payment_day = undefined;
+          updatedExpense.payment_month = undefined;
+          
+          // For monthly frequency, ensure payment_month remains undefined
+          if (value === "monthly") {
+            updatedExpense.payment_month = undefined;
+          }
+        } else if (field === "payment_day" || field === "payment_month") {
+          // Convert string value to number for date fields
+          if (value === "") {
+            updatedExpense[field] = undefined;
+          } else {
+            updatedExpense[field] = parseInt(value as string, 10);
+          }
+        } else if (field === "amount") {
+          updatedExpense.amount = parseFloat(value as string) || 0;
+        } else {
+          // For name field
+          updatedExpense.name = value as string;
+        }
+        
+        return updatedExpense;
       }
       return expense;
     });
@@ -142,17 +147,16 @@ function CalculatorContent() {
       if (updatedExpense) {
         await updateExpense(id, { 
           name: updatedExpense.name, 
-          amount: updatedExpense.amount 
+          amount: updatedExpense.amount,
+          payment_frequency: updatedExpense.payment_frequency,
+          payment_day: updatedExpense.payment_day,
+          payment_month: updatedExpense.payment_month
         });
       }
       
-      // Get updated budget
-      if (user) {
-        const budgetData = await getUserBudget(user.id);
-        if (budgetData) {
-          setDisposableIncome(budgetData.disposable_income);
-        }
-      }
+      // Recalculate disposable income locally
+      const newDisposableIncome = income - updatedExpenses.reduce((total, expense) => total + expense.amount, 0);
+      setDisposableIncome(newDisposableIncome);
       
       setSaveStatus("success");
       
@@ -171,7 +175,7 @@ function CalculatorContent() {
       setSaveStatus("saving");
       
       try {
-        const newExpense = await addExpense(user.id, newExpenseName, 0);
+        const newExpense = await addExpense(user.id, newExpenseName, 0, "one-time");
         
         if (newExpense) {
           setExpenses([...expenses, newExpense]);
@@ -253,7 +257,7 @@ function CalculatorContent() {
       <main>
         <div className="py-12 px-4 md:px-8">
           <div className="max-w-4xl mx-auto">
-            <h1 className="text-3xl md:text-4xl font-bold mb-8">Disposable Income Calculator</h1>
+            <h1 className="text-3xl md:text-4xl font-bold mb-8 text-center">Leftover Income Calculator</h1>
             
             {/* Save status indicator */}
             <div className="mb-6">
@@ -305,6 +309,78 @@ function CalculatorContent() {
                             className="block w-full rounded-md bg-transparent border border-black/20 dark:border-white/20 py-2 px-3 mb-2 focus:outline-none focus:ring-2 focus:ring-black/50 dark:focus:ring-white/50"
                             placeholder="Expense name"
                           />
+                          <div className="mb-2">
+                            <label className="block text-sm text-black/70 dark:text-white/70 mb-1">
+                              Payment Frequency
+                            </label>
+                            <select
+                              value={expense.payment_frequency || "one-time"}
+                              onChange={(e) => handleExpenseChange(expense.id, "payment_frequency", e.target.value)}
+                              className="block w-full rounded-md bg-transparent border border-black/20 dark:border-white/20 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black/50 dark:focus:ring-white/50"
+                            >
+                              <option value="one-time">One-time payment</option>
+                              <option value="monthly">Monthly</option>
+                              <option value="yearly">Yearly</option>
+                            </select>
+                          </div>
+                          
+                          {expense.payment_frequency === "monthly" && (
+                            <div className="mb-2">
+                              <label className="block text-sm text-black/70 dark:text-white/70 mb-1">
+                                Payment Day (1-31)
+                              </label>
+                              <input
+                                type="number"
+                                min="1"
+                                max="31"
+                                value={expense.payment_day || ""}
+                                onChange={(e) => handleExpenseChange(expense.id, "payment_day", e.target.value)}
+                                className="block w-full rounded-md bg-transparent border border-black/20 dark:border-white/20 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black/50 dark:focus:ring-white/50"
+                                placeholder="Day of month"
+                              />
+                            </div>
+                          )}
+                          
+                          {expense.payment_frequency === "yearly" && (
+                            <div className="mb-2">
+                              <label className="block text-sm text-black/70 dark:text-white/70 mb-1">
+                                Payment Month (1-12)
+                              </label>
+                              <select
+                                value={expense.payment_month || ""}
+                                onChange={(e) => handleExpenseChange(expense.id, "payment_month", e.target.value)}
+                                className="block w-full rounded-md bg-transparent border border-black/20 dark:border-white/20 py-2 px-3 mb-2 focus:outline-none focus:ring-2 focus:ring-black/50 dark:focus:ring-white/50"
+                              >
+                                <option value="">Select month</option>
+                                <option value="1">January</option>
+                                <option value="2">February</option>
+                                <option value="3">March</option>
+                                <option value="4">April</option>
+                                <option value="5">May</option>
+                                <option value="6">June</option>
+                                <option value="7">July</option>
+                                <option value="8">August</option>
+                                <option value="9">September</option>
+                                <option value="10">October</option>
+                                <option value="11">November</option>
+                                <option value="12">December</option>
+                              </select>
+                              
+                              <label className="block text-sm text-black/70 dark:text-white/70 mb-1">
+                                Payment Day (1-31)
+                              </label>
+                              <input
+                                type="number"
+                                min="1"
+                                max="31"
+                                value={expense.payment_day || ""}
+                                onChange={(e) => handleExpenseChange(expense.id, "payment_day", e.target.value)}
+                                className="block w-full rounded-md bg-transparent border border-black/20 dark:border-white/20 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black/50 dark:focus:ring-white/50"
+                                placeholder="Day of month"
+                              />
+                            </div>
+                          )}
+                          
                           <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                               <span className="text-black/50 dark:text-white/50">$</span>
@@ -418,7 +494,7 @@ function CalculatorContent() {
                       <div className="h-px bg-black/10 dark:bg-white/10"></div>
                       
                       <div>
-                        <p className="text-sm text-black/70 dark:text-white/70 mb-1">Disposable Income</p>
+                        <p className="text-sm text-black/70 dark:text-white/70 mb-1">Leftover Income</p>
                         <p className={`text-3xl font-bold font-mono ${
                             disposableIncome >= 0 
                               ? "text-green-600 dark:text-green-400" 
@@ -436,7 +512,7 @@ function CalculatorContent() {
                       
                       {disposableIncome > 0 && disposableIncome < income * 0.2 && (
                         <div className="bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800/30 rounded-md p-3 text-sm text-yellow-700 dark:text-yellow-300">
-                          Your disposable income is less than 20% of your total income. Consider reviewing your budget to increase savings.
+                          Your leftover income is less than 20% of your total income. Consider reviewing your budget to increase savings.
                         </div>
                       )}
                       

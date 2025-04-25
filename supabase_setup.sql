@@ -15,6 +15,10 @@ CREATE TABLE IF NOT EXISTS expenses (
   user_id UUID REFERENCES auth.users (id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
   amount NUMERIC NOT NULL DEFAULT 0,
+  date TEXT,
+  payment_frequency TEXT CHECK (payment_frequency IN ('one-time', 'monthly', 'yearly')) DEFAULT 'one-time',
+  payment_day INTEGER CHECK (payment_day IS NULL OR (payment_day >= 1 AND payment_day <= 31)), -- Day of month for monthly and yearly payments
+  payment_month INTEGER CHECK (payment_month IS NULL OR (payment_month >= 1 AND payment_month <= 12)), -- Month only for yearly payments
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
@@ -92,4 +96,57 @@ FOR EACH ROW EXECUTE FUNCTION update_disposable_income();
 
 CREATE TRIGGER update_budget_on_expense_change
 AFTER INSERT OR UPDATE OR DELETE ON expenses
-FOR EACH ROW EXECUTE FUNCTION update_disposable_income(); 
+FOR EACH ROW EXECUTE FUNCTION update_disposable_income();
+
+-- Migration script for existing expense tables
+-- Run this if you already have the expenses table and need to add the new columns
+-- This script is NON-DESTRUCTIVE and will preserve all existing data
+
+DO $$ 
+BEGIN
+  -- Check if the table exists and columns don't exist yet before adding them
+  IF EXISTS (
+    SELECT FROM information_schema.tables 
+    WHERE table_schema = 'public' 
+    AND table_name = 'expenses'
+  ) AND NOT EXISTS (
+    SELECT FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+    AND table_name = 'expenses' 
+    AND column_name = 'payment_frequency'
+  ) THEN
+    RAISE NOTICE 'Adding new columns to expenses table. All existing data will be preserved.';
+    
+    -- Add date column if it doesn't exist (preserves existing data)
+    ALTER TABLE expenses ADD COLUMN IF NOT EXISTS date TEXT;
+    
+    -- Add payment_frequency column with default and check constraint
+    -- This preserves all existing data and just adds a new column
+    ALTER TABLE expenses ADD COLUMN payment_frequency TEXT DEFAULT 'one-time';
+    ALTER TABLE expenses ADD CONSTRAINT payment_frequency_check 
+      CHECK (payment_frequency IN ('one-time', 'monthly', 'yearly'));
+    
+    -- Add payment_day column with check constraint
+    -- This preserves all existing data and just adds a new column
+    ALTER TABLE expenses ADD COLUMN payment_day INTEGER;
+    ALTER TABLE expenses ADD CONSTRAINT payment_day_check 
+      CHECK (payment_day IS NULL OR (payment_day >= 1 AND payment_day <= 31));
+    COMMENT ON COLUMN expenses.payment_day IS 'Day of month for monthly and yearly payments';
+    
+    -- Add payment_month column with check constraint
+    -- This preserves all existing data and just adds a new column
+    -- Only used for yearly payments, should remain NULL for monthly payments
+    ALTER TABLE expenses ADD COLUMN payment_month INTEGER;
+    ALTER TABLE expenses ADD CONSTRAINT payment_month_check 
+      CHECK (payment_month IS NULL OR (payment_month >= 1 AND payment_month <= 12));
+    COMMENT ON COLUMN expenses.payment_month IS 'Month only for yearly payments, should be NULL for monthly payments';
+    
+    -- Set default payment_frequency for existing records
+    -- This only affects the new column - all original data remains untouched
+    UPDATE expenses SET payment_frequency = 'one-time' WHERE payment_frequency IS NULL;
+    
+    RAISE NOTICE 'Migration completed successfully. All existing data has been preserved.';
+  ELSE
+    RAISE NOTICE 'No migration needed or table doesn''t exist.';
+  END IF;
+END $$; 
