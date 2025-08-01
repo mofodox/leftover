@@ -8,15 +8,6 @@ import { Card } from '@/components/ui/Card';
 export default function Home() {
   const router = useRouter();
 
-  useEffect(() => {
-    // Auto-redirect to dashboard after 3 seconds
-    const timer = setTimeout(() => {
-      router.push('/dashboard');
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [router]);
-
   const handleNavigate = (path: string) => {
     router.push(path);
   };
@@ -34,15 +25,6 @@ export default function Home() {
           <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
             Take control of your finances with our comprehensive subscription and expense tracking solution
           </p>
-        </div>
-
-        {/* Auto-redirect notice */}
-        <div className="text-center mb-8">
-          <Card className="p-4 bg-blue-50 border-blue-200 inline-block">
-            <p className="text-blue-800 text-sm">
-              🚀 Redirecting to dashboard in 3 seconds...
-            </p>
-          </Card>
         </div>
 
         {/* Feature highlights */}
