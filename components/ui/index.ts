@@ -11,3 +11,5 @@ export * from './AddSubscriptionForm';
 export * from './AddExpenseForm';
 export * from './SubscriptionManager';
 export * from './BillingAlerts';
+export * from './FinancialSummary';
+export * from './RecurringExpensePatterns';

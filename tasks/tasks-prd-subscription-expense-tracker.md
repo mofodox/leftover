@@ -58,9 +58,9 @@
   - [x] 4.6. Implement recurring expense detection and management
 
 - [ ] 5.0 Build financial overview dashboard
-  - [ ] 5.1 Create FinancialSummary component for totals and calculations in `components/ui/FinancialSummary.tsx`
-  - [ ] 5.2 Build main dashboard page with overview cards in `app/dashboard/page.tsx`
-  - [ ] 5.3 Implement monthly and yearly subscription cost calculations
-  - [ ] 5.4 Add expense summaries by category and time period
-  - [ ] 5.5 Create responsive grid layout for dashboard cards
-  - [ ] 5.6 Update main page to redirect to dashboard and add proper navigation
+  - [x] 5.1 Create FinancialSummary component for totals and calculations in `components/ui/FinancialSummary.tsx`
+  - [x] 5.2 Build main dashboard page with overview cards in `app/dashboard/page.tsx`
+  - [x] 5.3. Implement monthly and yearly subscription cost calculations
+  - [x] 5.4 Add expense summaries by category and time period
+  - [x] 5.5. Create responsive grid layout for dashboard cards
+  - [x] 5.6. Update main page to redirect to dashboard and add proper navigation
