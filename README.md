@@ -1,4 +1,21 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Subscription and Expense Tracker
+
+A personal web application designed to help individuals manage and monitor their recurring subscriptions and monthly expenses. This application provides a clear, centralized view of all financial commitments and spending patterns to enable better financial decision-making.
+
+## Features
+
+### Core Functionality
+- **Subscription Management**: Add, edit, and delete recurring subscriptions with billing cycles
+- **Expense Tracking**: Track one-time and recurring expenses with categories
+- **Financial Overview**: View total monthly and yearly spending summaries
+- **Category Analysis**: Organize and analyze spending by categories
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
+
+### Key Benefits
+- 📊 **Visibility**: Comprehensive overview of all active subscriptions and expenses
+- 💰 **Financial Awareness**: Understand total monthly and yearly spending commitments
+- 📱 **Simplicity**: Clean, intuitive interface for effortless expense tracking
+- 🎯 **Budget Management**: Track and categorize expenses for better budgeting
 
 ## Getting Started
 
@@ -16,9 +33,49 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The application will redirect you to the dashboard where you can start managing your subscriptions and expenses.
+
+## Project Structure
+
+```
+├── app/
+│   ├── dashboard/          # Main dashboard page
+│   ├── expenses/           # Expense management page
+│   ├── subscriptions/      # Subscription management page
+│   └── layout.tsx          # Root layout with navigation
+├── components/ui/          # Reusable UI components
+│   ├── AddExpenseForm.tsx
+│   ├── AddSubscriptionForm.tsx
+│   ├── FinancialSummary.tsx
+│   ├── Navigation.tsx
+│   └── ...
+├── lib/                    # Utility functions and types
+│   ├── storage.ts          # Data persistence
+│   ├── types.ts            # TypeScript definitions
+│   └── utils.ts            # Helper functions
+└── tasks/                  # Project documentation
+```
+
+## Technology Stack
+
+- **Framework**: [Next.js](https://nextjs.org) with App Router
+- **Language**: TypeScript
+- **Styling**: CSS Modules
+- **State Management**: React State
+- **Data Storage**: Local Storage (browser-based)
+
+## Usage
+
+1. **Dashboard**: Get an overview of your financial commitments
+2. **Subscriptions**: Add and manage recurring subscription services
+3. **Expenses**: Track one-time and recurring expenses
+4. **Categories**: Organize spending by custom categories
+
+## Development
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+You can start editing the pages by modifying files in the `app/` directory. The page auto-updates as you edit the file.
 
 ## Learn More
 
